@@ -1,12 +1,16 @@
 ﻿using Photon.Pun;
 using Photon.Realtime;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MonkeSpider.Behaviours
 {
     internal class MainManager : MonoBehaviour
     {
+        internal static Dictionary<Player, MainManager> Managers;
+
         internal (bool IsLocal, Player player) OnlinePlayer => (GetComponent<PhotonView>().IsMine, GetComponent<PhotonView>().Owner);
+        private bool IsLocal;
 
         internal class PlayerData
         {
@@ -27,20 +31,18 @@ namespace MonkeSpider.Behaviours
 
         private void Start()
         {
+            IsLocal = OnlinePlayer.IsLocal;
+            if (Managers == null)
+                Managers = new Dictionary<Player, MainManager>()
+                {
+                    { OnlinePlayer.player, this }
+                };
             SavedPlayerData = new PlayerData(transform.Find("rig/body/head"), transform.Find("rig/body/shoulder.L"), transform.Find("rig/body/shoulder.R"), GameObject.Find("Global/Local VRRig/Local Gorilla Player/rig/body/head/"));
+            if (Main.Instance.enabled)
+                SetOffset(true);
         }
 
-        private void Update()
-        {
-            if (Main.Instance.enabled && Main.Instance.InModded)
-                if (!InEffect)
-                    SetOffset(true);
-                else;
-            else if (InEffect)
-                SetOffset(false);
-        }
-
-        private void SetOffset(bool Activity)
+        internal void SetOffset(bool Activity)
         {
             InEffect = Activity;
             for (int i = 0; i < SavedPlayerData.BodyContraints.Length; i++)
@@ -49,6 +51,11 @@ namespace MonkeSpider.Behaviours
                 else
                     SavedPlayerData.BodyContraints[i].localPosition = Activity ? (SavedPlayerData.BodyContraints[i].localPosition - (Vector3.up * 0.25f + Vector3.forward * -0.1f)) : SavedPlayerData.DefaultLocalPositions[i];
             SavedPlayerData.LocalVRRigHead.SetActive(!Activity);
+
+            PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable()
+            {
+                { Main.KEY, Activity }
+            });
         }
     }
 }

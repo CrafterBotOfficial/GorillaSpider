@@ -12,7 +12,8 @@ namespace MonkeSpider
         internal const string
             GUID = "crafterbot.somedumbmonkegame.monkespider",
             NAME = "MonkeSpider",
-            VERSION = "1.0.0";
+            VERSION = "1.0.0",
+            KEY = "spidermonke";
         internal static Main Instance;
 
         internal ManualLogSource manualLogSource => Logger;
@@ -23,6 +24,11 @@ namespace MonkeSpider
             Instance = this;
 
             new HarmonyLib.Harmony(GUID).PatchAll();
+        }
+
+        private void Start()
+        {
+            new GameObject("Callbacks").AddComponent<Behaviours.Callbacks>();
         }
 
 #if DEBUG
@@ -44,13 +50,28 @@ namespace MonkeSpider
         private void OnModdedGamemodeJoin() =>
             InModded = true;
         [ModdedGamemodeLeave]
-        private void OnModdedGamemodeLeave() =>
+        private void OnModdedGamemodeLeave()
+        {
+            Behaviours.MainManager.Managers[Photon.Pun.PhotonNetwork.LocalPlayer].SetOffset(false);
             InModded = false;
+        }
         #endregion
 
-        public void OnEnable() =>
+        bool IsInitialized;
+        public void OnEnable()
+        {
             manualLogSource.LogInfo("Enabled!");
-        public void OnDisable() =>
+            if (!IsInitialized)
+            {
+                IsInitialized = true;
+                return;
+            }
+            Behaviours.MainManager.Managers[Photon.Pun.PhotonNetwork.LocalPlayer].SetOffset(true);
+        }
+        public void OnDisable()
+        {
             manualLogSource.LogInfo("Disabled!");
+            Behaviours.MainManager.Managers[Photon.Pun.PhotonNetwork.LocalPlayer].SetOffset(false);
+        }
     }
 }

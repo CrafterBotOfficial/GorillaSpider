@@ -76,6 +76,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Behaviours\Callbacks.cs" />
     <Compile Include="Behaviours\MainManager.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Patches.cs" />
